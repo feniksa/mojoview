@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+# ignore build directory
+build
+
+# ignore kdevelop IDE temp files
+*.kdev4
