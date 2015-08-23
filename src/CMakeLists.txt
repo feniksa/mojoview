@@ -9,14 +9,9 @@ set(QT_USE_QTGUI TRUE)
 message(STATUS "Use file is: ${QT_USE_FILE}")
 include(${QT_USE_FILE})
 
-include_directories("/usr/include/qt4")
-
 # hardcode path to mojodb libraries
 
-add_definitions(-DMOJ_LINUX -DMOJ_INTERNAL -D_REENTRANT)
-include_directories("/usr/include/glib-2.0" "/usr/lib64/glib-2.0/include")
-include_directories("/usr/include/mojodb")
-set (LIBS mojocore mojodb mojoluna)
+#add_definitions(-DMOJ_LINUX -DMOJ_INTERNAL -D_REENTRANT)
 
 # .cxx sources
 set(SRCS_CXX

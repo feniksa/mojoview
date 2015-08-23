@@ -77,23 +77,26 @@ public:
 	using  Base = MojReactorApp<MojGmainReactor>;
 
 	MojDbLunaServiceApp(MojUInt32 majorVersion = MajorVersion, MojUInt32 minorVersion = MinorVersion, const MojChar* versionString = 0)
-	: MojReactorApp<MojGmainReactor>(MajorVersion, MinorVersion, VersionString){}
+	: MojReactorApp<MojGmainReactor>(MajorVersion, MinorVersion, VersionString)
+	{
+	}
 
-	MojErr configure(const MojObject& conf) override {
+	MojErr configure(const MojObject& conf) override
+	{
 		MojErr err = Base::configure(conf);
 		MojErrCheck(err);
 
 		return MojErrNone;
 	}
+
 	MojErr init() override
 	{
 		MojErr err = Base::init();
 		MojErrCheck(err);
 
-
-
 		return MojErrNone;
 	}
+
 	MojErr open() override {
 		MojErr err = Base::open();
 		MojErrCheck(err);
@@ -104,7 +107,8 @@ public:
 
 		return MojErrNone;
 	}
-	MojErr close() override {
+	MojErr close() override
+	{
 		// stop dispatcher
 		MojErr err = MojErrNone;
 		MojErr errClose = m_dispatcher.stop();
@@ -122,17 +126,14 @@ public:
 private:
 	static const MojChar* const VersionString;
 
-	MojAutoPtr<MojDbServiceClient> m_dbClient(new MojDbServiceClient(m_service.get()));
-	MojRefCountedPtr<MojDbClientHandler> handler (new MojDbClientHandler);
+	MojAutoPtr<MojDbServiceClient> m_dbClient;
+	//(new MojDbServiceClient(m_service.get()));
+	//MojRefCountedPtr<MojDbClientHandler> handler (new MojDbClientHandler);
 
 	MojMessageDispatcher m_dispatcher;
 };
 
-#ifndef MOJ_VERSION_STRING
-#define MOJ_VERSION_STRING NULL
-#endif
-
-const MojChar* const MojDbLunaServiceApp::VersionString = MOJ_VERSION_STRING;
+const MojChar* const MojDbLunaServiceApp::VersionString = "0.0.1";
 
 MojErr test()
 {
