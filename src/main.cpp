@@ -17,25 +17,56 @@ class MojDbClientHandler : public MojSignalHandler
 public:
 	MojDbClientHandler()
 	: m_dbErr(MojErrNone),
-	m_callbackInvoked (false),
-	m_slot(this, &MojDbClientHandler::handleResult)
+	  m_callbackInvoked (false),
+	  m_slot(this, &MojDbClientHandler::handleResult),
+	  m_slotKinds(this, &MojDbClientHandler::handleKindsList)
 	{
+	}
+
+	MojErr handleKindsList(MojObject& result, MojErr errCode)
+	{
+		MojErr err;
+		MojErrCatchAll(errCode) {
+			MojString what;
+			err = MojErrToString(errCode, what);
+			MojErrCheck(err);
+
+			// notify about error
+
+			return MojErrNone;
+		}
+
+		MojString str;
+		err = result.toJson(str);
+		MojErrCheck(err);
+
+
+		std::cerr << str.data() << std::endl;
+
+		return MojErrNone;
 	}
 
 	MojErr handleResult(MojObject& result, MojErr errCode)
 	{
+		MojErr err;
+
+		MojString str;
+		err = result.stringValue(str);
+		MojErrCheck(err);
+
+		std::cerr << str.data() << std::endl;
+
 		m_callbackInvoked = true;
 		m_result = result;
 		m_dbErr = errCode;
 		if (errCode != MojErrNone) {
 			bool found = false;
-			MojErr err = result.get(MojServiceMessage::ErrorTextKey, m_errTxt, found);
+			err = result.get(MojServiceMessage::ErrorTextKey, m_errTxt, found);
 			MojErrCheck(err);
 
 		}
 		return MojErrNone;
 	}
-
 
 	void reset()
 	{
@@ -45,38 +76,31 @@ public:
 		m_result.clear();
 	}
 
-	MojErr wait(MojService* service)
-	{
-		while (!m_callbackInvoked) {
-			MojErr err = service->dispatch();
-			MojErrCheck(err);
-		}
-		return MojErrNone;
-	}
 
 	MojErr m_dbErr;
 	MojString m_errTxt;
 	MojObject m_result;
 	bool m_callbackInvoked;
 	MojDbClient::Signal::Slot<MojDbClientHandler> m_slot;
+	MojDbClient::Signal::Slot<MojDbClientHandler> m_slotKinds;
 
 };
 
 const char* json = _T("{")
-				_T("\"id\":\"com.test.test:1\",")
-				_T("\"owner\":\"com.test.test\",")
+				_T("\"id\":\"com.200volts.mojoview:1\",")
+				_T("\"owner\":\"com.200volts.mojoview\",")
 				_T("\"indexes\":[")
 						_T("{\"name\":\"foo\", \"props\":[{\"name\":\"foo\"}]},")
 						_T("{\"name\":\"barfoo\",\"props\":[{\"name\":\"bar\"},{\"name\":\"foo\"}] }")
 					_T("]")
 				_T("}");
 
-class MojDbLunaServiceApp : public MojReactorApp<MojGmainReactor>
+class MojLunaServiceApp : public MojReactorApp<MojGmainReactor>
 {
 public:
 	using  Base = MojReactorApp<MojGmainReactor>;
 
-	MojDbLunaServiceApp(MojUInt32 majorVersion = MajorVersion, MojUInt32 minorVersion = MinorVersion, const MojChar* versionString = 0)
+	MojLunaServiceApp(MojUInt32 majorVersion = MajorVersion, MojUInt32 minorVersion = MinorVersion, const MojChar* versionString = 0)
 	: MojReactorApp<MojGmainReactor>(MajorVersion, MinorVersion, VersionString)
 	{
 	}
@@ -94,10 +118,15 @@ public:
 		MojErr err = Base::init();
 		MojErrCheck(err);
 
+		m_service.reset(new MojLunaService);
+		m_dbClient.reset(new MojDbServiceClient(m_service.get()));
+		m_handler.reset(new MojDbClientHandler);
+
 		return MojErrNone;
 	}
 
-	MojErr open() override {
+	MojErr open() override
+	{
 		MojErr err = Base::open();
 		MojErrCheck(err);
 
@@ -105,8 +134,15 @@ public:
 		err = m_dispatcher.start(2);
 		MojErrCheck(err);
 
+		err = m_service->open(_T("com.palm.configurator"));
+		MojErrCheck(err);
+
+		err = m_service->attach(m_reactor.impl());
+		MojErrCheck(err);
+
 		return MojErrNone;
 	}
+
 	MojErr close() override
 	{
 		// stop dispatcher
@@ -116,9 +152,38 @@ public:
 		errClose = m_dispatcher.wait();
 		MojErrAccumulate(err, errClose);
 
-
 		errClose = Base::close();
 		MojErrAccumulate(err, errClose);
+
+		return MojErrNone;
+	}
+
+	MojErr run() override
+	{
+		MojErr err;
+		MojObject obj;
+		err = obj.fromJson(json);
+		MojErrCheck(err);
+
+		err = m_dbClient->kinds(m_handler->m_slotKinds);
+		MojErrCheck(err);
+
+		MojDbQuery q;
+		err = q.from(_T("com.200volts.mojoview:1"));
+		MojErrCheck(err);
+
+		MojString bar;
+		err = bar.assign(_T("aaa"));
+		MojErrCheck(err);
+
+		err = q.where(_T("bar"), MojDbQuery::OpEq, bar);
+		MojErrCheck(err);
+
+		err = m_dbClient->find(m_handler->m_slot, q);
+		MojErrCheck(err);
+
+		err = Base::run();
+		MojErrCheck(err);
 
 		return MojErrNone;
 	}
@@ -126,16 +191,17 @@ public:
 private:
 	static const MojChar* const VersionString;
 
+	MojAutoPtr<MojLunaService> m_service;
 	MojAutoPtr<MojDbServiceClient> m_dbClient;
 	//(new MojDbServiceClient(m_service.get()));
-	//MojRefCountedPtr<MojDbClientHandler> handler (new MojDbClientHandler);
+	MojRefCountedPtr<MojDbClientHandler> m_handler;// (new MojDbClientHandler);
 
 	MojMessageDispatcher m_dispatcher;
 };
 
-const MojChar* const MojDbLunaServiceApp::VersionString = "0.0.1";
+const MojChar* const MojLunaServiceApp::VersionString = "0.0.1";
 
-MojErr test()
+/*MojErr test()
 {
 	MojErr err;
 
@@ -144,7 +210,7 @@ MojErr test()
 	MojErrCheck(err);
 
 	MojAutoPtr<MojLunaService> service(new MojLunaService);
-	err = service->open(_T("com.palm.configurator"));
+	err = service->open(_T("com.200volts.mojoview"));
 	MojErrCheck(err);
 
 	err = service->attach(reactor->impl());
@@ -176,7 +242,7 @@ MojErr test()
 	// --------------------------------------------------------------------
 	// select obj via query
 	MojDbQuery q;
-	err = q.from(_T("com.test.test:1"));
+	err = q.from(_T("com.200volts.mojoview:1"));
 	MojErrCheck(err);
 
 	MojString bar;
@@ -198,7 +264,7 @@ MojErr test()
 
 	std::cerr << str.data() << std::endl;
 	handler->reset();
-}
+}*/
 
 int main(int argc, char** argv)
 {
@@ -214,7 +280,7 @@ int main(int argc, char** argv)
 	/*if (err != MojErrNone)
 		return -1;*/
 
-	MojAutoPtr<MojDbLunaServiceApp> app(new MojDbLunaServiceApp);
+	MojAutoPtr<MojLunaServiceApp> app(new MojLunaServiceApp);
 	MojAllocCheck(app.get());
 
 	return app->main(argc, argv);
