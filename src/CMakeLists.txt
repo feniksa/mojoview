@@ -15,6 +15,8 @@ include(${QT_USE_FILE})
 
 # .cxx sources
 set(SRCS_CXX
+	MojClientHandler.cpp
+	MojAppMain.cpp
 	error.cpp
 	mainwindow.cpp
 	main.cpp
