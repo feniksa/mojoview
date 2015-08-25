@@ -19,14 +19,16 @@ public:
 	MojErr init();
 	MojErr open();
 	MojErr close();
-	MojErr run();
+	//MojErr run();
+
+	MojDbServiceClient* client() { return m_dbClient.get(); }
+	MojRefCountedPtr<MojDbClientHandler> handler() { return m_handler; }
 
 private:
 	static const MojChar* const VersionString;
 
 	MojAutoPtr<MojLunaService> m_service;
-	MojAutoPtr<MojDbServiceClient> m_dbClient;
-	//(new MojDbServiceClient(m_service.get()));
+	MojRefCountedPtr<MojDbServiceClient> m_dbClient;
 	MojRefCountedPtr<MojDbClientHandler> m_handler;// (new MojDbClientHandler);
 
 	MojMessageDispatcher m_dispatcher;

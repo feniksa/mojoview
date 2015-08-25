@@ -1,7 +1,7 @@
 #include <QApplication>
 #include "mainwindow.h"
 
-#include "MojAppMain.h"
+#include "MojWorker.h"
 
 int main(int argc, char** argv)
 {
@@ -12,15 +12,28 @@ int main(int argc, char** argv)
 
     return app.exec();*/
 
-	MojErr err; // = test();
+	//MojErr err; // = test();
 
 	/*if (err != MojErrNone)
 		return -1;*/
 
-	MojAutoPtr<MojAppMain> app(new MojAppMain);
+	/*MojAutoPtr<MojAppMain> app(new MojAppMain);
 	MojAllocCheck(app.get());
 
-	return app->main(argc, argv);
+	return app->main(argc, argv);*/
 
+	MojWorker mojWorker(argc, argv);
+	mojWorker.start();
 
+	QApplication app(argc, argv);
+
+	MainWindow mainwindow(mojWorker.client());
+	mainwindow.show();
+
+	int res = app.exec();
+
+	mojWorker.stop();
+	mojWorker.wait();
+
+	return res;
 }

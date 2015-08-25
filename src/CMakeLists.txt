@@ -20,6 +20,7 @@ set(SRCS_CXX
 	error.cpp
 	mainwindow.cpp
 	main.cpp
+	KindsModel.cpp
 )
 
 # files which need to be moc'd by Qt
@@ -27,6 +28,8 @@ set(MOC_SRCS
     #	settings.h
     #	networkmanager.h
 	mainwindow.h
+	MojWorker.h
+	KindsModel.h
 )
 
 

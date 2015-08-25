@@ -59,7 +59,7 @@ MojErr MojAppMain::close()
 
 	return MojErrNone;
 }
-
+/*
 MojErr MojAppMain::run()
 {
 	MojErr err;
@@ -85,4 +85,4 @@ MojErr MojAppMain::run()
 	MojErrCheck(err);
 
 	return MojErrNone;
-}
+}*/

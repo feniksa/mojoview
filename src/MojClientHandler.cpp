@@ -18,12 +18,14 @@ MojErr MojDbClientHandler::handleKindsList(MojObject& result, MojErr errCode)
 			bool found = false;
 			err = result.get(MojServiceMessage::ErrorTextKey, m_errTxt, found);
 			MojErrCheck(err);
-
 		}*/
 
 		// notify about error
 		return MojErrNone;
 	}
+
+	err = result.getRequired(_T("result"), m_kinds);
+	MojErrCheck(err);
 
 	// parse result
 

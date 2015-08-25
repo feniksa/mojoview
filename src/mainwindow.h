@@ -11,12 +11,14 @@ class QVBoxLayout;
 class QProgressBar;
 class QTreeView;
 
+class MojDbClient;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+	explicit MainWindow(MojDbClient* client, QWidget* parent = 0, Qt::WindowFlags flags = 0);
 
 protected:
     void closeEvent(QCloseEvent *event);

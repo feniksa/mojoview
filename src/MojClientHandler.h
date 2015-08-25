@@ -13,4 +13,6 @@ public:
 
 	MojDbClient::Signal::Slot<MojDbClientHandler> m_slot;
 	MojDbClient::Signal::Slot<MojDbClientHandler> m_slotKinds;
+
+	MojObject m_kinds;
 };

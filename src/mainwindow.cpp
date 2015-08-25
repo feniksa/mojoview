@@ -18,8 +18,9 @@
 #include <QtGui/QVBoxLayout>
 
 #include <QtGui/QStandardItemModel>
+#include "KindsModel.h"
 
-MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags):QMainWindow(parent, flags)
+MainWindow::MainWindow(MojDbClient* client, QWidget* parent, Qt::WindowFlags flags):QMainWindow(parent, flags)
 {
     QWidget* mainWidget = new QWidget();
 
@@ -29,12 +30,10 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags):QMainWindow(paren
     createMenus();
     createToolBar();
 
-
-	QStandardItemModel* items = new QStandardItemModel();
-
+	KindsModel* kindsModel = new KindsModel(client, this);
 
 	treeView = new QTreeView();
-	treeView->setModel(items);
+	treeView->setModel(kindsModel);
 
 	mainLayout = new QVBoxLayout;
 	mainLayout->addWidget(treeView);
@@ -47,7 +46,7 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags flags):QMainWindow(paren
 
     loadSettings();
 
-
+	kindsModel->load();
 }
 
 void MainWindow::createActions()
